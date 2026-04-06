@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Exercise Recommender</title>
+<style>
+    body {
+    font-family: sans-serif;
+    max-width: 700px;
+    /* Center the content on the page */
+    margin: 40px auto;
+    padding: 0 20px;
+    background-color: #f9f9f9;
+    }
+
+    input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    /* Prevents the input from overflowing its container */
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    }
+
+    button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #1a4fa0;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    }
+
+    .card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    }
+
+    .card h3 {
+    margin: 0 0 8px;
+    }
+
+    /* Small label badges for exercise metadata */
+    .tag {
+    display: inline-block;
+    background: #eef;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-right: 4px;
+    }
+
+    .reason {
+    margin-top: 10px;
+    color: #555;
+    /* Italicize to visually distinguish the LLM's explanation
+        from the exercise's own description */
+    font-style: italic;
+    }
+
+    #error {
+    color: red;
+    margin-top: 12px;
+    }
+
+    #loading {
+    margin-top: 12px;
+    color: #888;
+    }
+</style>
+</head>
+<body>
+<h1>Exercise Recommender</h1>
+<p>Describe what you need and we'll find the most relevant exercises for you.</p>
+
+<input
+    id="query"
+    type="text"
+    placeholder='e.g. "knee pain, low impact exercises"'
+/>
+<button onclick="search()">Get Recommendations</button>
+
+<div id="loading" style="display:none;">Finding recommendations...</div>
+<div id="error"></div>
+<div id="results"></div>
+
+<script>
+    async function search() {
+    const query = document.getElementById("query").value.trim();
+
+    // Don't fire a request if the input is empty
+    if (!query) return;
+
+    // Reset state from any previous search
+    document.getElementById("results").innerHTML = "";
+    document.getElementById("error").innerText = "";
+    document.getElementById("loading").style.display = "block";
+
+    try {
+        const res = await fetch("http://localhost:8000/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query }),
+        });
+
+        // Handle non-200 responses from the API
+        if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        // Build a card for each recommended exercise and inject into the DOM.
+        // Use map() to transform each result into an HTML string,
+        // then join() to combine them into one string before setting innerHTML.
+        document.getElementById("results").innerHTML = data.results.map(ex => `
+        <div class="card">
+            <h3>${ex.title}</h3>
+            <span class="tag">${ex.body_part}</span>
+            <span class="tag">${ex.difficulty}</span>
+            <span class="tag">${ex.equipment}</span>
+            <span class="tag">${ex.intensity}</span>
+            <p>${ex.description}</p>
+            <div class="reason">Why this was recommended: ${ex.reason}</div>
+        </div>
+        `).join("");
+
+    } catch (err) {
+        document.getElementById("error").innerText = "Something went wrong. Make sure the server is running.";
+        console.error(err);
+    } finally {
+        // Always hide the loading indicator whether the request succeeded or failed
+        document.getElementById("loading").style.display = "none";
+    }
+    }
+</script>
+</body>
+</html>

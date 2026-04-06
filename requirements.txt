@@ -1,0 +1,6 @@
+fastapi==0.135.3
+groq==1.1.2
+psycopg2_binary==2.9.10
+pydantic==2.12.5
+python-dotenv==1.2.2
+sentence_transformers==5.2.0
