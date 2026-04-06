@@ -8,6 +8,7 @@ Users describe what they need in plain text and the system returns the most rele
 
 ## Table of Contents
 - [Tech Stack](#tech-stack)
+- [Demo](#demo)
 - [How It Works](#how-it-works)
 - [Project Structure](#project-structure)
 - [Local Setup](#local-setup)
